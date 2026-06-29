@@ -14,7 +14,7 @@ if [ -f .env ]; then
   set +a
 fi
 
-MAP_REGION_URL="${MAP_REGION_URL:-https://download.geofabrik.de/north-america/us/delaware-latest.osm.pbf}"
+MAP_REGION_URL="${MAP_REGION_URL:-https://download.geofabrik.de/north-america/us/north-carolina-latest.osm.pbf}"
 MAP_BASENAME="${MAP_BASENAME:-region}"
 OSRM_IMAGE="${OSRM_IMAGE:-ghcr.io/project-osrm/osrm-backend:latest}"
 

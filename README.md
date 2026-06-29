@@ -68,7 +68,7 @@ Open your browser to **http://localhost:8081** (or `http://<your-pi-ip>:8081`).
 │  OSRM (routing)                    :5000        │
 │  └── Driving directions & avoid-highways        │
 ├─────────────────────────────────────────────────┤
-│  Nominatim (geocoding)             :8080        │
+│  Nominatim (geocoding)             :8082        │
 │  └── Address search & location lookup           │
 └─────────────────────────────────────────────────┘
 ```
@@ -83,7 +83,8 @@ Edit `MAP_REGION_URL` in `.env` to match where you plan trips. Smaller regions i
 
 | Region | URL | Approx. Size |
 |--------|-----|--------------|
-| Delaware (default) | `https://download.geofabrik.de/north-america/us/delaware-latest.osm.pbf` | ~25 MB |
+| North Carolina (default) | `https://download.geofabrik.de/north-america/us/north-carolina-latest.osm.pbf` | ~200 MB |
+| Delaware | `https://download.geofabrik.de/north-america/us/delaware-latest.osm.pbf` | ~25 MB |
 | Tennessee | `https://download.geofabrik.de/north-america/us/tennessee-latest.osm.pbf` | ~250 MB |
 | Full US | `https://download.geofabrik.de/north-america/us-latest.osm.pbf` | ~11 GB |
 
@@ -119,8 +120,8 @@ Copy `.env.example` to `.env` and customize:
 | `POSTGRES_DB` | `tripplanner` | Database name |
 | `JWT_SECRET` | (change me) | Secret for auth tokens |
 | `OSRM_URL` | `http://osrm:5000` | Self-hosted OSRM routing service |
-| `NOMINATIM_URL` | `http://nominatim:8080` | Self-hosted Nominatim geocoding service |
-| `MAP_REGION_URL` | Delaware extract | OSM data download URL |
+| `NOMINATIM_URL` | `http://nominatim:8082` | Self-hosted Nominatim geocoding service |
+| `MAP_REGION_URL` | North Carolina extract | OSM data download URL |
 | `MAP_BASENAME` | `region` | Base filename for map files |
 | `NOMINATIM_PASSWORD` | `nominatim_secret` | Nominatim internal DB password |
 | `NOMINATIM_SHM_SIZE` | `1g` | Shared memory for Nominatim import |

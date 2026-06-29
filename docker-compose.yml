@@ -47,10 +47,18 @@ services:
       - nominatim_data:/var/lib/postgresql/14/main
       - nominatim_flatnode:/nominatim/flatnode
     expose:
-      - "8080"
+      - "8082"
+    ports:
+      - "${NOMINATIM_PORT:-8082}:8082"
     shm_size: ${NOMINATIM_SHM_SIZE:-1g}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        sed -i 's/8080/8082/g' /etc/apache2/ports.conf
+        find /etc/apache2/sites-enabled -type f -exec sed -i 's/8080/8082/g' {} +
+        exec /app/start.sh
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/status | grep -q 'OK' || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8082/status | grep -q 'OK' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 20
@@ -65,7 +73,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
       PORT: 3001
       OSRM_URL: ${OSRM_URL:-http://osrm:5000}
-      NOMINATIM_URL: ${NOMINATIM_URL:-http://nominatim:8080}
+      NOMINATIM_URL: ${NOMINATIM_URL:-http://nominatim:8082}
       OCM_API_KEY: ${OCM_API_KEY:-}
     depends_on:
       db:
