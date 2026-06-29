@@ -98,7 +98,7 @@ export default function TripPrint() {
           const chargers = typeof section.superchargers === 'string'
             ? JSON.parse(section.superchargers)
             : section.superchargers;
-          const directions = section.directions_text?.split('\n') || [];
+          const directions = section.directions_text?.split('\n').filter((line) => line.trim()) || [];
 
           return (
             <div key={section.id || i} className="triptik-section triptik-page">
@@ -139,12 +139,9 @@ export default function TripPrint() {
                 <div className="triptik-directions">
                   <h3>Turn-by-Turn Directions</h3>
                   <ol>
-                    {directions.slice(0, 20).map((dir, j) => (
+                    {directions.map((dir, j) => (
                       <li key={j}>{dir}</li>
                     ))}
-                    {directions.length > 20 && (
-                      <li className="more-directions">...and {directions.length - 20} more steps</li>
-                    )}
                   </ol>
                 </div>
 

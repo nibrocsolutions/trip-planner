@@ -84,7 +84,7 @@ export default function TripMap({ stops = [], sections = [], highlightSection = 
         center={defaultCenter}
         zoom={defaultZoom}
         className="trip-map"
-        scrollWheelZoom
+        scrollWheelZoom={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

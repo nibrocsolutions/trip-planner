@@ -908,7 +908,7 @@ input:focus, textarea:focus, select:focus {
   margin-bottom: 2rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .triptik-header {
@@ -1042,15 +1042,12 @@ input:focus, textarea:focus, select:focus {
 .triptik-directions ol {
   padding-left: 1.25rem;
   font-size: 0.85rem;
+  break-inside: auto;
 }
 
 .triptik-directions li {
   margin-bottom: 0.375rem;
-}
-
-.more-directions {
-  color: var(--color-text-muted);
-  font-style: italic;
+  break-inside: avoid;
 }
 
 .triptik-chargers ul {
@@ -1098,6 +1095,15 @@ input:focus, textarea:focus, select:focus {
     border: none;
     margin: 0;
     border-radius: 0;
+    overflow: visible;
+  }
+
+  .triptik-details {
+    break-inside: auto;
+  }
+
+  .triptik-directions {
+    break-inside: auto;
   }
 
   .triptik-map {
