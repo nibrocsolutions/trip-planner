@@ -32,7 +32,7 @@ cp .env.example .env   # optional: customize settings
 docker compose up -d --build
 ```
 
-Open your browser to **http://localhost:8080** (or `http://<your-pi-ip>:8080`).
+Open your browser to **http://localhost:8081** (or `http://<your-pi-ip>:8081`).
 
 ### Default Login Credentials
 
@@ -47,7 +47,7 @@ Open your browser to **http://localhost:8080** (or `http://<your-pi-ip>:8080`).
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  Frontend (nginx + React)          :8080        │
+│  Frontend (nginx + React)          :8081        │
 │  ├── Interactive map (Leaflet/OSM)              │
 │  ├── Trip editor & TripTik print view           │
 │  └── Admin panel                                │
@@ -68,7 +68,7 @@ Copy `.env.example` to `.env` and customize:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `APP_PORT` | `8080` | Web interface port |
+| `APP_PORT` | `8081` | Web interface port |
 | `POSTGRES_USER` | `tripplanner` | Database username |
 | `POSTGRES_PASSWORD` | `tripplanner_secret` | Database password |
 | `POSTGRES_DB` | `tripplanner` | Database name |
@@ -168,7 +168,7 @@ docker compose exec backend node src/seed.js
 
 - The app runs well on Pi 4/5 with 2GB+ RAM
 - First build may take 10-15 minutes on Pi — subsequent starts are fast
-- Access from other devices: `http://<pi-ip-address>:8080`
+- Access from other devices: `http://<pi-ip-address>:8081`
 - For HTTPS, place a reverse proxy (Caddy/nginx) in front of the app
 - Data persists in the `trip_planner_data` Docker volume
 

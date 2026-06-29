@@ -38,7 +38,7 @@ services:
     container_name: trip-planner-web
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-8080}:80"
+      - "${APP_PORT:-8081}:80"
     depends_on:
       - backend
 
