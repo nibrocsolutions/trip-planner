@@ -27,6 +27,7 @@ services:
       PORT: 3001
       OSRM_URL: ${OSRM_URL:-https://router.project-osrm.org}
       NOMINATIM_URL: ${NOMINATIM_URL:-https://nominatim.openstreetmap.org}
+      ORS_API_KEY: ${ORS_API_KEY:-}
       OCM_API_KEY: ${OCM_API_KEY:-}
     depends_on:
       db:

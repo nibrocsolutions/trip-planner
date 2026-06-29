@@ -80,6 +80,7 @@ Copy `.env.example` to `.env` and customize:
 | `JWT_SECRET` | (change me) | Secret for auth tokens |
 | `OSRM_URL` | `https://router.project-osrm.org` | OSRM routing API |
 | `NOMINATIM_URL` | `https://nominatim.openstreetmap.org` | Nominatim geocoding API |
+| `ORS_API_KEY` | (optional) | OpenRouteService key for avoid-highways routing |
 | `OCM_API_KEY` | (optional) | OpenChargeMap API key for superchargers |
 
 ### External Services
@@ -88,12 +89,15 @@ The app uses these free public APIs (no API keys required for basic use):
 
 | Service | Provider | Purpose |
 |---------|----------|---------|
-| **OSRM** | [router.project-osrm.org](https://router.project-osrm.org) | Route calculation with highway avoidance |
+| **OSRM** | [router.project-osrm.org](https://router.project-osrm.org) | Route calculation |
 | **Nominatim** | [nominatim.openstreetmap.org](https://nominatim.openstreetmap.org) | Address search and geocoding |
+| **OpenRouteService** | [openrouteservice.org](https://openrouteservice.org) | Scenic routing (optional `ORS_API_KEY`) |
 | **OpenStreetMap** | [openstreetmap.org](https://www.openstreetmap.org) | Map tiles displayed in the browser |
 | **OpenChargeMap** | [openchargemap.io](https://openchargemap.io) | Tesla supercharger locations (optional API key) |
 
-> **Usage note:** The public Nominatim and OSRM servers are shared community resources. Please avoid heavy automated use. For production or high-traffic deployments, consider running your own instances or using a paid geocoding/routing provider.
+> **Avoid Highways note:** The public OSRM server does not support highway avoidance. Trips with "Avoid Highways" enabled will still route successfully using the standard fastest route. For true scenic routing, add a free [OpenRouteService API key](https://openrouteservice.org/dev/#/signup) as `ORS_API_KEY` in your `.env`.
+
+> **Usage note:** The public Nominatim and OSRM servers are shared community resources. Please avoid heavy automated use.
 
 ## Usage Guide
 
