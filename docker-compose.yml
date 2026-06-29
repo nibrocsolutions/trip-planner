@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: trip-planner-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tripplanner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tripplanner_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-tripplanner}
+    volumes:
+      - trip_planner_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tripplanner} -d ${POSTGRES_DB:-tripplanner}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: trip-planner-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-tripplanner}:${POSTGRES_PASSWORD:-tripplanner_secret}@db:5432/${POSTGRES_DB:-tripplanner}
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      PORT: 3001
+      OSRM_URL: ${OSRM_URL:-https://router.project-osrm.org}
+      OCM_API_KEY: ${OCM_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "3001"
+
+  frontend:
+    build: ./frontend
+    container_name: trip-planner-web
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  trip_planner_data:
