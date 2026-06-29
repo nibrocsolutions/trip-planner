@@ -14,25 +14,30 @@ A self-hosted road trip planning web application with interactive maps, scenic r
 - **TripTik Printing** — Print each trip section with map, mileage, turn-by-turn directions, and charger info
 - **User Authentication** — Separate admin and user accounts with role-based access
 - **Admin Dashboard** — Create users, manage roles, reset passwords, enable/disable accounts
-- **Docker Ready** — One-command deployment with PostgreSQL database container
+- **Fully Self-Hosted Routing** — OSRM and Nominatim run in their own Docker containers (no external API dependency for maps/routing)
 
 ## Quick Start (Raspberry Pi or Any Docker Host)
 
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed
-- On Raspberry Pi: Docker supports ARM64 natively — no extra configuration needed
+- On Raspberry Pi: Docker supports ARM64 natively — 4GB+ RAM recommended (Nominatim import is memory-intensive)
+- ~500MB–2GB disk space for map data depending on region chosen
 
-### Install in Two Commands
+### Install
 
 ```bash
 git clone https://github.com/nibrocsolutions/trip-planner.git
 cd trip-planner
-cp .env.example .env   # optional: customize settings
+cp .env.example .env   # optional: customize region and settings
+chmod +x scripts/setup-map-data.sh
+./scripts/setup-map-data.sh
 docker compose up -d --build
 ```
 
 Open your browser to **http://localhost:8081** (or `http://<your-pi-ip>:8081`).
+
+> **First startup note:** Nominatim imports the map data on its first run. This can take 30–90+ minutes depending on region size and hardware. Monitor progress with `docker compose logs -f nominatim`.
 
 ### Default Login Credentials
 
@@ -59,7 +64,48 @@ Open your browser to **http://localhost:8081** (or `http://<your-pi-ip>:8081`).
 ├─────────────────────────────────────────────────┤
 │  PostgreSQL 16                     :5432        │
 │  └── Users, trips, stops, sections              │
+├─────────────────────────────────────────────────┤
+│  OSRM (routing)                    :5000        │
+│  └── Driving directions & avoid-highways        │
+├─────────────────────────────────────────────────┤
+│  Nominatim (geocoding)             :8082        │
+│  └── Address search & location lookup           │
 └─────────────────────────────────────────────────┘
+```
+
+## Map Data & Self-Hosted Services
+
+Trip Planner runs **OSRM** (routing) and **Nominatim** (geocoding) in separate containers. Both share the same OpenStreetMap extract stored in `data/map/`.
+
+### Choosing a Map Region
+
+Edit `MAP_REGION_URL` in `.env` to match where you plan trips. Smaller regions import faster on a Raspberry Pi.
+
+| Region | URL | Approx. Size |
+|--------|-----|--------------|
+| North Carolina (default) | `https://download.geofabrik.de/north-america/us/north-carolina-latest.osm.pbf` | ~200 MB |
+| Delaware | `https://download.geofabrik.de/north-america/us/delaware-latest.osm.pbf` | ~25 MB |
+| Tennessee | `https://download.geofabrik.de/north-america/us/tennessee-latest.osm.pbf` | ~250 MB |
+| Full US | `https://download.geofabrik.de/north-america/us-latest.osm.pbf` | ~11 GB |
+
+Browse more regions at [download.geofabrik.de](https://download.geofabrik.de/).
+
+### Setup Script
+
+`scripts/setup-map-data.sh` handles:
+
+1. Downloading the OSM `.pbf` file for your chosen region
+2. Pre-processing routing data for the OSRM container (`extract` → `partition` → `customize`)
+
+Re-run the script after changing `MAP_REGION_URL` (delete `data/map/` first to force a fresh download).
+
+```bash
+# Change region, then re-setup
+rm -rf data/map/*
+./scripts/setup-map-data.sh
+docker compose down
+docker volume rm trip-planner_nominatim_data trip-planner_nominatim_flatnode 2>/dev/null || true
+docker compose up -d --build
 ```
 
 ## Configuration
@@ -73,18 +119,17 @@ Copy `.env.example` to `.env` and customize:
 | `POSTGRES_PASSWORD` | `tripplanner_secret` | Database password |
 | `POSTGRES_DB` | `tripplanner` | Database name |
 | `JWT_SECRET` | (change me) | Secret for auth tokens |
-| `OSRM_URL` | public OSRM | Routing service URL |
-| `OCM_API_KEY` | (optional) | OpenChargeMap API key |
+| `OSRM_URL` | `http://osrm:5000` | Self-hosted OSRM routing service |
+| `NOMINATIM_URL` | `http://nominatim:8082` | Self-hosted Nominatim geocoding service |
+| `MAP_REGION_URL` | North Carolina extract | OSM data download URL |
+| `MAP_BASENAME` | `region` | Base filename for map files |
+| `NOMINATIM_PASSWORD` | `nominatim_secret` | Nominatim internal DB password |
+| `NOMINATIM_SHM_SIZE` | `1g` | Shared memory for Nominatim import |
+| `OCM_API_KEY` | (optional) | OpenChargeMap API key for superchargers |
 
 ### External Services
 
-The app uses these free external APIs by default:
-
-- **OpenStreetMap** — Map tiles and geocoding (Nominatim)
-- **OSRM** — Route calculation with highway avoidance
-- **OpenChargeMap** — Tesla supercharger locations
-
-For offline/air-gapped use, you can self-host OSRM and Nominatim. See the [OSRM backend docs](http://project-osrm.org/) for details.
+Only **OpenChargeMap** (Tesla supercharger lookup) and **OpenStreetMap map tiles** (displayed in the browser) use external services. Routing and address search are fully self-hosted.
 
 ## Usage Guide
 
@@ -128,7 +173,7 @@ Admins can access the **Admin** panel to:
 cd backend
 npm install
 cp ../.env.example .env
-# Set DATABASE_URL=postgresql://tripplanner:tripplanner_secret@localhost:5432/tripplanner
+# Point OSRM_URL and NOMINATIM_URL to running containers or public fallbacks
 npm run seed
 npm run dev
 ```
@@ -140,9 +185,10 @@ npm install
 npm run dev
 ```
 
-**Database:** Start PostgreSQL locally or run just the DB container:
+**Map services only:**
 ```bash
-docker compose up -d db
+./scripts/setup-map-data.sh
+docker compose up -d db osrm nominatim
 ```
 
 ### Useful Commands
@@ -151,11 +197,15 @@ docker compose up -d db
 # View logs
 docker compose logs -f
 
+# Watch Nominatim import progress
+docker compose logs -f nominatim
+
 # Stop the application
 docker compose down
 
-# Stop and remove all data
+# Stop and remove all data (including map imports)
 docker compose down -v
+rm -rf data/map/*
 
 # Rebuild after code changes
 docker compose up -d --build
@@ -166,11 +216,12 @@ docker compose exec backend node src/seed.js
 
 ## Raspberry Pi Tips
 
-- The app runs well on Pi 4/5 with 2GB+ RAM
-- First build may take 10-15 minutes on Pi — subsequent starts are fast
+- Use a **small map region** (state or smaller) for reasonable import times
+- Pi 4/5 with **4GB+ RAM** recommended for Nominatim
+- First build may take 10–15 minutes on Pi — Nominatim import adds significant time
 - Access from other devices: `http://<pi-ip-address>:8081`
 - For HTTPS, place a reverse proxy (Caddy/nginx) in front of the app
-- Data persists in the `trip_planner_data` Docker volume
+- App data persists in Docker volumes; map files persist in `data/map/`
 
 ## Project Structure
 
@@ -188,6 +239,9 @@ trip-planner/
 │   │   ├── pages/
 │   │   └── styles/
 │   └── Dockerfile
+├── scripts/
+│   └── setup-map-data.sh  # Download & process OSM data
+├── data/map/          # Shared OSM + OSRM files (gitignored)
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
