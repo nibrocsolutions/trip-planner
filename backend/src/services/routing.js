@@ -1,7 +1,8 @@
-const OSRM_URL = process.env.OSRM_URL || 'https://router.project-osrm.org';
+const OSRM_URL = process.env.OSRM_URL || 'http://osrm:5000';
+const NOMINATIM_URL = process.env.NOMINATIM_URL || 'http://nominatim:8080';
 
 async function geocode(query) {
-  const url = new URL('https://nominatim.openstreetmap.org/search');
+  const url = new URL(`${NOMINATIM_URL}/search`);
   url.searchParams.set('q', query);
   url.searchParams.set('format', 'json');
   url.searchParams.set('limit', '5');
