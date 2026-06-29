@@ -17,53 +17,6 @@ services:
       timeout: 5s
       retries: 10
 
-  osrm:
-    image: ${OSRM_IMAGE:-ghcr.io/project-osrm/osrm-backend:latest}
-    container_name: trip-planner-osrm
-    restart: unless-stopped
-    volumes:
-      - ./data/map:/data
-    command: osrm-routed --algorithm mld /data/${MAP_BASENAME:-region}.osrm
-    expose:
-      - "5000"
-    healthcheck:
-      test: ["CMD-SHELL", "pgrep -f osrm-routed > /dev/null"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  nominatim:
-    image: ${NOMINATIM_IMAGE:-mediagis/nominatim:4.4}
-    container_name: trip-planner-nominatim
-    restart: unless-stopped
-    environment:
-      PBF_PATH: /data/${MAP_BASENAME:-region}.osm.pbf
-      NOMINATIM_PASSWORD: ${NOMINATIM_PASSWORD:-nominatim_secret}
-      IMPORT_WIKIPEDIA: "false"
-      REPLICATION_URL: ""
-    volumes:
-      - ./data/map:/data
-      - nominatim_data:/var/lib/postgresql/14/main
-      - nominatim_flatnode:/nominatim/flatnode
-    expose:
-      - "8082"
-    ports:
-      - "${NOMINATIM_PORT:-8082}:8082"
-    shm_size: ${NOMINATIM_SHM_SIZE:-1g}
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - |
-        sed -i 's/8080/8082/g' /etc/apache2/ports.conf
-        find /etc/apache2/sites-enabled -type f -exec sed -i 's/8080/8082/g' {} +
-        exec /app/start.sh
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8082/status | grep -q 'OK' || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 20
-      start_period: 600s
-
   backend:
     build: ./backend
     container_name: trip-planner-api
@@ -72,15 +25,11 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-tripplanner}:${POSTGRES_PASSWORD:-tripplanner_secret}@db:5432/${POSTGRES_DB:-tripplanner}
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
       PORT: 3001
-      OSRM_URL: ${OSRM_URL:-http://osrm:5000}
-      NOMINATIM_URL: ${NOMINATIM_URL:-http://nominatim:8082}
+      OSRM_URL: ${OSRM_URL:-https://router.project-osrm.org}
+      NOMINATIM_URL: ${NOMINATIM_URL:-https://nominatim.openstreetmap.org}
       OCM_API_KEY: ${OCM_API_KEY:-}
     depends_on:
       db:
-        condition: service_healthy
-      osrm:
-        condition: service_healthy
-      nominatim:
         condition: service_healthy
     expose:
       - "3001"
@@ -96,5 +45,3 @@ services:
 
 volumes:
   trip_planner_data:
-  nominatim_data:
-  nominatim_flatnode:

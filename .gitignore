@@ -3,6 +3,3 @@ dist/
 .env
 *.log
 .DS_Store
-data/map/*.osm.pbf
-data/map/*.osrm*
-data/map/*.pbf
